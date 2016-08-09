@@ -1,0 +1,46 @@
+{% load i18n %}
+{% if geo %}
+<div class="geo">
+    <script src="//api-maps.yandex.ru/2.1/?lang=ru-RU" type="text/javascript"></script>
+    <h2 class="block_title">География проектов</h2>
+	<style>
+        #newsin {
+            width: 100%; height: 500px; padding: 0; margin: 0;
+        }
+    </style>
+    <div id="newsin">
+
+    </div>
+    <script language="JavaScript">
+        //https://tech.yandex.ru/maps/jsbox/2.1/object_manager
+        ymaps.ready(function () {
+            var myMap = new ymaps.Map('newsin', {
+                    center: [55.751574, 37.573856],
+                    zoom: 5
+                }, {
+                    searchControlProvider: 'yandex#search'
+                }),
+                clusterer = new ymaps.Clusterer();
+                geoObjects = [];
+             {% for foo in geo %}
+                 geoObjects[{{ forloop.counter0 }}] = new ymaps.Placemark([{{ foo.pos }}],{balloonContent: '{{ foo.title }}<br/>{{ foo.description }}', hintContent: '{{ foo.title }}'}, {preset: 'twirl#violetIcon'});
+             {% endfor %}
+
+            clusterer.add(geoObjects);
+            myMap.geoObjects.add(clusterer);
+
+            // Откроем балун на третьей метке в массиве.
+            var objectState = clusterer.getObjectState(geoObjects[2]);
+            if (objectState.isClustered) {
+                // Если метка находится в кластере, выставим ее в качестве активного объекта.
+                // Тогда она будет "выбрана" в открытом балуне кластера.
+                objectState.cluster.state.set('activeObject', geoObjects[2]);
+                clusterer.balloon.open(objectState.cluster);
+            } else if (objectState.isShown) {
+                // Если метка не попала в кластер и видна на карте, откроем ее балун.
+                geoObjects[2].balloon.open();
+            }
+        });
+    </script>
+</div>
+{% endif %}
